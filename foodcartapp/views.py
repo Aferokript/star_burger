@@ -1,6 +1,6 @@
-import json
 from django.http import JsonResponse
 from django.templatetags.static import static
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Product, Order, OrderItem
@@ -61,18 +61,27 @@ def product_list_api(request):
 @api_view(['POST'])
 def register_order(request):
     order_data = request.data
-    print(order_data)
-    name = order_data.get('firstname')
-    last_name = order_data.get('lastname')
-    phone_number = order_data.get('phonenumber')
-    address = order_data.get('address')
-    
-    order = Order.objects.create(name=name, last_name=last_name, phone_number=phone_number, address=address)
-    
-    for item in order_data['products']:
-        OrderItem.objects.create(order_details=order, products_id=item['product'], quantity=item['quantity'])
+    if isinstance(order_data, dict) and order_data != {}:
+        print(order_data)
+        name = order_data.get('firstname')
+        last_name = order_data.get('lastname')
+        phone_number = order_data.get('phonenumber')
+        address = order_data.get('address')
         
+        order = Order.objects.create(name=name, last_name=last_name, phone_number=phone_number, address=address)
+    
+        product = order_data.get('products')
+        if product is None or product == []:
+            return Response({'error': 'product не может быть пустым'}, status=status.HTTP_400_BAD_REQUEST)
+    
+        for item in product:
+            if isinstance(item, dict):
+                OrderItem.objects.create(order_details=order, products_id=item['product'], quantity=item['quantity'])
+    
+            else:
+                return Response({'error': 'Products должен быть словарем'}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({'error': 'Заполните форму'}, status=status.HTTP_400_BAD_REQUEST)
     return Response(order_data)
     
-
 
