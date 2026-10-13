@@ -5,7 +5,7 @@ from django.templatetags.static import static
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Product, Order, OrderItem
+from .models import Product, Order, OrderItem, OrderSerialize
 
 
 def banners_list_api(request):
@@ -58,46 +58,15 @@ def product_list_api(request):
         'ensure_ascii': False,
         'indent': 4,
     })
-
+    
 
 @api_view(['POST'])
 def register_order(request):
-    order_data = request.data
-    if isinstance(order_data, dict) and order_data != {}:
-        print(order_data)
-        name = order_data.get('firstname')
-        last_name = order_data.get('lastname')
-        phone_number_str = order_data.get('phonenumber')
-        address = order_data.get('address')
-        
-        if not isinstance(all([name, last_name, phone_number_str, address]), str):
-            return Response({'error': 'Одно из полей пустое'}, status=status.HTTP_400_BAD_REQUEST)
-                    
-        try:
-            parsed_number = phonenumbers.parse(phone_number_str, "RU")
-        except NumberParseException:
-            return Response({'error': 'Некорректный номер телефона'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if not phonenumbers.is_valid_number(parsed_number):
-            return Response({'error': 'Некооректный номер телефона'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        order = Order.objects.create(name=name, last_name=last_name, phone_number=phone_number_str, address=address)
-            
-        product = order_data.get('products')
-        
-        if product is None or product == []:
-            return Response({'error': 'product не может быть пустым'}, status=status.HTTP_400_BAD_REQUEST)
+    serializer = OrderSerialize(data=request.data)
+    serializer.is_valid(raise_exception=True)
     
-        for item in product:
-            if isinstance(item, dict) and Product.objects.filter(id=item['product']).exists():
-                OrderItem.objects.create(order_details=order, products_id=item['product'], quantity=item['quantity'])
+    serializer.save()
     
-            else:
-                return Response({'error': 'Products должен быть словарем или несуществующий товар'}, status=status.HTTP_400_BAD_REQUEST)
-            
-    else:
-        return Response({'error': 'Заполните форму'}, status=status.HTTP_400_BAD_REQUEST)
+    return Response('Ваш заказ успешно собран')
     
-    return Response(order_data)
     
-

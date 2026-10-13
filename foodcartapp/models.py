@@ -1,6 +1,10 @@
 from django.db import models
+import phonenumbers
 from django.core.validators import MinValueValidator
 from phonenumber_field.modelfields import PhoneNumberField
+from phonenumbers.phonenumberutil import NumberParseException 
+from rest_framework import serializers 
+from rest_framework.serializers import ValidationError ,CharField, IntegerField
 
 
 class Restaurant(models.Model):
@@ -125,9 +129,9 @@ class RestaurantMenuItem(models.Model):
 
 
 class Order(models.Model):
-    name = models.CharField(max_length=30, null=False, verbose_name='Имя')
-    last_name = models.CharField(max_length=30, null=False, verbose_name='Фамилия')
-    phone_number = PhoneNumberField(blank=True, null=False, verbose_name='Телефон')
+    firstname = models.CharField(max_length=30, null=False, verbose_name='Имя')
+    lastname = models.CharField(max_length=30, null=False, verbose_name='Фамилия')
+    phonenumber = PhoneNumberField(blank=True, null=False, verbose_name='Телефон')
     address = models.CharField(max_length=80, null=False, verbose_name='Адрес', db_index=True)
     
     
@@ -137,7 +141,7 @@ class Order(models.Model):
         
         
     def __str__(self):
-        return f"{self.name} {self.last_name} {self.address}"
+        return f"{self.firstname} {self.lastname} {self.address}"
 
 
 class OrderItem(models.Model):
@@ -153,3 +157,40 @@ class OrderItem(models.Model):
     
     def __str__(self):
         return f"{self.order_details}  {self.quantity}"
+    
+
+class ItemSerialize(serializers.Serializer):
+    order_details = CharField()
+    products = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
+    quantity = IntegerField()
+    
+    def validate(self, attrs):
+        if not Product.objects.filter(id=attrs['products']).exists():
+            raise ValidationError(
+                'Несуществующее блюдо'
+            )
+        return attrs
+    
+
+class OrderSerialize(serializers.Serializer):
+    firstname = CharField()
+    lastname = CharField()
+    phonenumber = CharField()
+    address = CharField()
+    item_data = ItemSerialize(many=True)
+    
+    
+    def create(self, validated_data):
+        item_data = validated_data.pop('item_data')
+        order = Order.objects.create(**validated_data)
+        
+        for item in item_data:
+            OrderItem.objects.create(order_details=order, **item)
+            
+       
+       
+
+
+
+
+    

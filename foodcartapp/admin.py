@@ -115,5 +115,5 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['name', 'last_name', 'phone_number', 'address',]
+    list_display = ['firstname', 'lastname', 'phonenumber', 'address',]
     inlines = [OrderItemAdmin]
