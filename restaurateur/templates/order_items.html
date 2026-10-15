@@ -6,27 +6,31 @@
   <center>
     <h2>Необработанные заказы</h2>
   </center>
-
   <hr/>
   <br/>
   <br/>
   <div class="container">
-   <table class="table table-responsive">
-    <tr>
-      <th>ID заказа</th>
-      <th>Клиент</th>
-      <th>Телефон</th>
-      <th>Адрес доставки</th>
-    </tr>
-
-    {% for item in order_items %}
-      <tr>
-        <td>-</td>
-        <td>-</td>
-        <td>-</td>
-        <td>-</td>
-      </tr>
-    {% endfor %}
-   </table>
+    <table class="table table-responsive">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Имя</th>
+          <th>Фамилия</th>
+          <th>Телефон</th>
+          <th>Адрес</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for data in order_data %}
+          <tr>
+            <td>{{ data.id }}</td>
+            <td>{{ data.firstname }}</td>
+            <td>{{ data.lastname }}</td>
+            <td>{{ data.phonenumber }}</td>
+            <td>{{ data.address }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 {% endblock %}

@@ -5,7 +5,7 @@ from django.urls import reverse_lazy
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
-
+from foodcartapp.models import Order
 
 from foodcartapp.models import Product, Restaurant
 
@@ -59,7 +59,7 @@ class LogoutView(auth_views.LogoutView):
 
 
 def is_manager(user):
-    return user.is_staff  # FIXME replace with specific permission
+    return user.is_staff
 
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
@@ -93,6 +93,18 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    return render(request, template_name='order_items.html', context={
-        # TODO заглушка для нереализованного функционала
-    })
+    if is_manager(request.user):
+        order_data = []
+        for order in Order.objects.all().prefetch_related('items'):
+            order_data.append({
+            'id': order.id,
+            'firstname': order.firstname,
+            'lastname': order.lastname,
+            'phonenumber': order.phonenumber,
+            'address': order.address
+            })
+                
+        context = {
+            'order_data': order_data
+        }
+        return render(request, 'order_items.html', context=context)

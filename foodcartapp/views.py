@@ -2,6 +2,8 @@ import phonenumbers
 from phonenumbers.phonenumberutil import NumberParseException 
 from django.http import JsonResponse
 from django.templatetags.static import static
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.parsers import JSONParser
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -60,13 +62,18 @@ def product_list_api(request):
     })
     
 
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 def register_order(request):
-    serializer = OrderSerialize(data=request.data)
-    serializer.is_valid(raise_exception=True)
     
-    serializer.save()
+    if request.method == 'GET':
+        return Response('Отправьте сюда ПОСТ запрос')
     
-    return Response('Ваш заказ успешно собран')
+    elif request.method == 'POST':
+        order_data = request.data
+        serializer = OrderSerialize(data=order_data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
     
     

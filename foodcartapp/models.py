@@ -146,7 +146,7 @@ class Order(models.Model):
 
 class OrderItem(models.Model):
     order_details = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
-    products = models.ForeignKey(Product, related_name='order_items', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, related_name='order_items', on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=0)
     
     
@@ -160,33 +160,26 @@ class OrderItem(models.Model):
     
 
 class ItemSerialize(serializers.Serializer):
-    order_details = CharField()
-    products = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
+    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
     quantity = IntegerField()
-    
-    def validate(self, attrs):
-        if not Product.objects.filter(id=attrs['products']).exists():
-            raise ValidationError(
-                'Несуществующее блюдо'
-            )
-        return attrs
     
 
 class OrderSerialize(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
     firstname = CharField()
     lastname = CharField()
     phonenumber = CharField()
     address = CharField()
-    item_data = ItemSerialize(many=True)
+    products = ItemSerialize(many=True, write_only=True, required=False)
     
     
     def create(self, validated_data):
-        item_data = validated_data.pop('item_data')
+        item_data = validated_data.pop('products')
         order = Order.objects.create(**validated_data)
         
         for item in item_data:
             OrderItem.objects.create(order_details=order, **item)
-            
+        return order
        
        
 
