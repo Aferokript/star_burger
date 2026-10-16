@@ -1,11 +1,18 @@
 from django.db import models
 import phonenumbers
+from django.db.models import F, Sum
 from django.core.validators import MinValueValidator
 from phonenumber_field.modelfields import PhoneNumberField
 from phonenumbers.phonenumberutil import NumberParseException 
 from rest_framework import serializers 
 from rest_framework.serializers import ValidationError ,CharField, IntegerField
 
+
+class OrderQuerySet(models.QuerySet):
+
+    def count_order_price(self):
+        return self.annotate(total_price=Sum(F('items__product__price') * F("items__quantity"))) 
+            
 
 class Restaurant(models.Model):
     name = models.CharField(
@@ -139,7 +146,9 @@ class Order(models.Model):
         verbose_name = 'Заказ'
         verbose_name_plural = 'Заказы'
         
-        
+    objects = OrderQuerySet.as_manager()
+    
+    
     def __str__(self):
         return f"{self.firstname} {self.lastname} {self.address}"
 
@@ -182,7 +191,12 @@ class OrderSerialize(serializers.Serializer):
         return order
        
        
-
+                
+           
+              
+            
+            
+    
 
 
 
