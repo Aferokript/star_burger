@@ -9,6 +9,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Product, Order, OrderItem, OrderSerialize
 from django.core.exceptions import ValidationError
+from django.db import transaction
 
 
 def banners_list_api(request):
@@ -71,13 +72,14 @@ def register_order(request):
             return Response('Отправьте сюда ПОСТ запрос')
     
         elif request.method == 'POST':
-            order_data = request.data
-            serializer = OrderSerialize(data=order_data)
-            if serializer.is_valid() and serializer.full_clean():
-                serializer.save()
-                return Response(serializer.data, status=201)
+            with transaction.atomic():
+                order_data = request.data
+                serializer = OrderSerialize(data=order_data)
+                if serializer.is_valid() and serializer.full_clean():
+                    serializer.save()
+                    return Response(serializer.data, status=201)
             
-            return Response(serializer.errors, status=400)
+                return Response(serializer.errors, status=400)
         
     except ValidationError as error:
         return Response(f'{error}', status=400)

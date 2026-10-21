@@ -1,12 +1,12 @@
 from django import forms
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
+from django.urls import reverse
 from django.views import View
 from django.urls import reverse_lazy
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
 from foodcartapp.models import Order
-
 from foodcartapp.models import Product, Restaurant
 
 
@@ -109,3 +109,8 @@ def view_orders(request):
             'order_data': order_data
         }
         return render(request, 'order_items.html', context=context)
+
+
+def change_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id )
+    change_url = reverse("admin:foodcartapp_order_change", args=(order.id,))
