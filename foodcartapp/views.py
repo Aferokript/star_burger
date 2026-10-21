@@ -8,6 +8,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Product, Order, OrderItem, OrderSerialize
+from django.core.exceptions import ValidationError
 
 
 def banners_list_api(request):
@@ -65,15 +66,20 @@ def product_list_api(request):
 @api_view(['GET', 'POST'])
 def register_order(request):
     
-    if request.method == 'GET':
-        return Response('Отправьте сюда ПОСТ запрос')
+    try:
+        if request.method == 'GET':
+            return Response('Отправьте сюда ПОСТ запрос')
     
-    elif request.method == 'POST':
-        order_data = request.data
-        serializer = OrderSerialize(data=order_data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
-    
+        elif request.method == 'POST':
+            order_data = request.data
+            serializer = OrderSerialize(data=order_data)
+            if serializer.is_valid() and serializer.full_clean():
+                serializer.save()
+                return Response(serializer.data, status=201)
+            
+            return Response(serializer.errors, status=400)
+        
+    except ValidationError as error:
+        return Response(f'{error}', status=400)
+        
     

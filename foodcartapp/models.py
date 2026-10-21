@@ -6,6 +6,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 from phonenumbers.phonenumberutil import NumberParseException 
 from rest_framework import serializers 
 from rest_framework.serializers import ValidationError ,CharField, IntegerField
+from django.core.validators import MinValueValidator
 
 
 class OrderQuerySet(models.QuerySet):
@@ -157,6 +158,7 @@ class OrderItem(models.Model):
     order_details = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, related_name='order_items', on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=0)
+    price = models.DecimalField(max_digits=5, decimal_places=2, validators=[MinValueValidator(100)])
     
     
     class Meta:
