@@ -30,8 +30,8 @@
             <td>{{ data.lastname }}</td>
             <td>{{ data.phonenumber }}</td>
             <td>{{ data.address }}</td>
-            <td><a href="{% url 'admin:foodcartapp_order_change' data.id %}">Ссылка на админку</a></td>
-            
+            <td><a href="{% url 'admin:foodcartapp_order_change' data.id %}?next={{ request.get_full_path|urlencode }}">Ссылка на админку</a></td>
+          
           </tr>
         {% endfor %}
       </tbody>

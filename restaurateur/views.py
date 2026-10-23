@@ -113,4 +113,9 @@ def view_orders(request):
 
 def change_order(request, order_id):
     order = get_object_or_404(Order, id=order_id )
-    change_url = reverse("admin:foodcartapp_order_change", args=(order.id,))
+    return redirect("admin:foodcartapp_order_change", order.id)
+    
+    
+
+    
+    

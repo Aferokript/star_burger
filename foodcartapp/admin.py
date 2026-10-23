@@ -1,5 +1,6 @@
 from django.contrib import admin
-from django.shortcuts import reverse
+from django.shortcuts import reverse, redirect
+from django.http import HttpResponseRedirect
 from django.templatetags.static import static
 from django.utils.html import format_html
 from django.db.models import F, Sum
@@ -123,6 +124,18 @@ class OrderItemAdmin(admin.TabularInline):
 class OrderAdmin(admin.ModelAdmin):
     list_display = ['firstname', 'lastname', 'phonenumber', 'address',]
     inlines = [OrderItemAdmin]
+    
+    
+    def response_change(self, request, obj):
+        res = super().response_change(request, obj)
+        if "next" in request.GET:
+            return HttpResponseRedirect(request.GET['next'])
+        else:
+            return res
+    
+    
+
+
     
     
     
