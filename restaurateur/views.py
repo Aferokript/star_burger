@@ -96,14 +96,19 @@ def view_orders(request):
     if is_manager(request.user):
         order_data = []
         for order in Order.objects.all().count_order_price():
-            order_data.append({
-                'id': order.id,
-                'total_price': order.total_price,
-                'firstname': order.firstname,
-                'lastname': order.lastname,
-                'phonenumber': order.phonenumber,
-                'address': order.address
-            })
+            if order.status == 'VI':
+                continue
+            else:
+                 order_data.append({
+                    'id': order.id,
+                    'status': order.get_status_display(),
+                    'total_price': order.total_price,
+                    'firstname': order.firstname,
+                    'lastname': order.lastname,
+                    'phonenumber': order.phonenumber,
+                    'address': order.address
+                })
+            
                 
         context = {
             'order_data': order_data

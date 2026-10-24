@@ -138,6 +138,12 @@ class RestaurantMenuItem(models.Model):
 
 class Order(models.Model):
     firstname = models.CharField(max_length=30, null=False, verbose_name='Имя')
+    status = models.CharField(max_length=50, choices=[
+            ('PR', 'Принят'),
+            ('SO', 'Собираем'),
+            ('KU', 'Везем к вам '),
+            ('VI', 'Выполнен')
+        ], db_index=True)
     lastname = models.CharField(max_length=30, null=False, verbose_name='Фамилия')
     phonenumber = PhoneNumberField(blank=True, null=False, verbose_name='Телефон')
     address = models.CharField(max_length=80, null=False, verbose_name='Адрес', db_index=True)
@@ -182,6 +188,8 @@ class OrderSerialize(serializers.Serializer):
     phonenumber = CharField()
     address = CharField()
     products = ItemSerialize(many=True, write_only=True, required=False)
+    
+    
     
     
     def create(self, validated_data):
