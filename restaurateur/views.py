@@ -102,6 +102,7 @@ def view_orders(request):
                  order_data.append({
                     'id': order.id,
                     'status': order.get_status_display(),
+                    'comments':order.comments,
                     'total_price': order.total_price,
                     'firstname': order.firstname,
                     'lastname': order.lastname,
