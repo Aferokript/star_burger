@@ -149,9 +149,15 @@ class Order(models.Model):
     lastname = models.CharField(max_length=30, null=False, verbose_name='Фамилия')
     phonenumber = PhoneNumberField(blank=True, null=False, verbose_name='Телефон')
     address = models.CharField(max_length=80, null=False, verbose_name='Адрес', db_index=True)
-    registrated_at = models.DateTimeField(default=timezone.now)
+    registrated_at = models.DateTimeField(default=timezone.now, db_index=True)
     called_at = models.DateTimeField(null=True, blank=True)
     delivered_at = models.DateTimeField(null=True, blank=True)
+    pay_order = models.CharField(max_length=35, choices=[
+        ('NA', 'Наличные'),
+        ('CA', 'Оплата картой'),
+        ('SBP', 'СБП')
+        ])
+            
     
     class Meta:
         verbose_name = 'Заказ'
