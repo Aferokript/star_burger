@@ -7,6 +7,7 @@ from phonenumbers.phonenumberutil import NumberParseException
 from rest_framework import serializers 
 from rest_framework.serializers import ValidationError ,CharField, IntegerField
 from django.core.validators import MinValueValidator
+from django.utils import timezone
 
 
 class OrderQuerySet(models.QuerySet):
@@ -148,7 +149,9 @@ class Order(models.Model):
     lastname = models.CharField(max_length=30, null=False, verbose_name='Фамилия')
     phonenumber = PhoneNumberField(blank=True, null=False, verbose_name='Телефон')
     address = models.CharField(max_length=80, null=False, verbose_name='Адрес', db_index=True)
-    
+    registrated_at = models.DateTimeField(default=timezone.now)
+    called_at = models.DateTimeField(null=True, blank=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
     
     class Meta:
         verbose_name = 'Заказ'

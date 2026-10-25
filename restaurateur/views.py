@@ -107,7 +107,10 @@ def view_orders(request):
                     'firstname': order.firstname,
                     'lastname': order.lastname,
                     'phonenumber': order.phonenumber,
-                    'address': order.address
+                    'address': order.address,
+                    'registrated_at': order.registrated_at,
+                    'called_at': order.called_at,
+                    'delivered_at': order.delivered_at
                 })
             
                 
