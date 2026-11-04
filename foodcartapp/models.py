@@ -31,6 +31,8 @@ class Restaurant(models.Model):
         max_length=50,
         blank=True,
     )
+    lon = models.FloatField(verbose_name='Широта')
+    lat = models.FloatField(verbose_name='Долгота')
 
     class Meta:
         verbose_name = 'ресторан'
@@ -96,6 +98,7 @@ class Product(models.Model):
         max_length=200,
         blank=True,
     )
+    ingredients = models.JSONField(default=list, verbose_name='Список продуктов')
 
     objects = ProductQuerySet.as_manager()
 
@@ -125,6 +128,7 @@ class RestaurantMenuItem(models.Model):
         default=True,
         db_index=True
     )
+    
 
     class Meta:
         verbose_name = 'пункт меню ресторана'
@@ -156,7 +160,8 @@ class Order(models.Model):
         ('NA', 'Наличные'),
         ('CA', 'Оплата картой'),
         ('SBP', 'СБП')
-        ])
+        ], db_index=True)
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, verbose_name='Рестораны')
             
     
     class Meta:

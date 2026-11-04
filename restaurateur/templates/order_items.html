@@ -22,7 +22,8 @@
           <th>Телефон</th>
           <th>Адрес</th>
           <th>Комментарий</th>
-        </tr>
+          <th>Ресторан</th>
+         </tr>
       </thead>
       <tbody>
         {% for data in order_data %}
@@ -35,7 +36,13 @@
             <td>{{ data.lastname }}</td>
             <td>{{ data.phonenumber }}</td>
             <td>{{ data.address }}</td>
-            <th>{{ data.comments }}
+            <td>{{ data.comments }}<td>
+            <td> <details>
+              <summary>Может быть приготовлен ресторанами:</summary>
+                {% for rest in data.restaurant %}
+              {{ rest.restaurant.name }} {{ rest.distance }}
+                {% endfor %}
+            </details></td>
             <td><a href="{% url 'admin:foodcartapp_order_change' data.id %}?next={{ request.get_full_path|urlencode }}">Ссылка на админку</a></td>
           
           </tr>
