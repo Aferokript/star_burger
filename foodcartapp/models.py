@@ -98,7 +98,6 @@ class Product(models.Model):
         max_length=200,
         blank=True,
     )
-    ingredients = models.JSONField(default=list, verbose_name='Список продуктов')
 
     objects = ProductQuerySet.as_manager()
 

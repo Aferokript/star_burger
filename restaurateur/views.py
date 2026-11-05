@@ -93,20 +93,19 @@ def fetch_coordinates(apikey, address):
     return lon, lat            
             
 
-def get_nearest_restaurant(pk):
-    restaurant_places = []
-    order = get_object_or_404(Order, pk=pk)
-    all_restaurants = Restaurant.objects.all()
-    client_lat_lon = fetch_coordinates(api_key, order.address)
-    client_address = [float(client_lat_lon[1]), float(client_lat_lon[0])]
-    for restaurant in all_restaurants:
-        place_lon_lat = fetch_coordinates(api_key, restaurant.address)
-        place_restaurant = [float(place_lon_lat[1]), float(place_lon_lat[0])]
-        restaurant_places.append({'restaurant': restaurant, 'distance': distance(client_address, place_restaurant)})
-    restaurant_places.sort(key=lambda item: item['distance'])
-    return restaurant_places
-        
-       
+def get_nearest_restaurant():
+    restaurants_coordinate = []
+    restaurants = Restaurant.objects.all()
+    for restaurant in restaurants:
+        restaurant_coordinate = fetch_coordinates(api_key, restaurant.address)
+        if restaurant_coordinate:
+            lon, lat = restaurant_coordinate
+            restaurants_coordinate.append({
+                'restaurant': restaurant,
+                'coords': (float(lat), float(lon))
+            })
+    return restaurants_coordinate
+    
 
 def is_manager(user):
     return user.is_staff
@@ -143,43 +142,59 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    if is_manager(request.user):
-        order_data = []
+    order_data = []
 
-        all_restaurants = list(Restaurant.objects.prefetch_related('menu_items__product'))
+    all_restaurants = list(Restaurant.objects.prefetch_related('menu_items__product'))
+
+    orders = Order.objects.all().count_order_price().prefetch_related('items__product')
+    
+
+    for order in orders:
+        if order.status == 'VI':
+            continue
+            
+        if order.restaurant:
+            capable_restaurants = [order.restaurant]
+        else:
+            capable_restaurants = [r for r in all_restaurants if can_cook(order, r)]
+
+        client_lon_lat = fetch_coordinates(api_key, order.address)
         
-        orders = Order.objects.all().count_order_price().prefetch_related('items__product')
+        restaurant_places = [] 
         
-        for order in orders:
-            if order.status == 'VI':
-                continue
+        if client_lon_lat:
+            client_address = (float(client_lon_lat[1]), float(client_lon_lat[0]))
+            restaurants_coordinate = get_nearest_restaurant()
+
+            for item in restaurants_coordinate:
+                distance_to_restaurant = distance(client_address, item['coords']).km
+                restaurant_places.append({
+                    'restaurant': item['restaurant'], 
+                    'distance': distance_to_restaurant
+                })
+            restaurant_places.sort(key=lambda item: item['distance'])
             
-            if order.restaurant:
-                capable_restaurants = [order.restaurant]
-            else:
-                capable_restaurants = [r for r in all_restaurants if can_cook(order, r)]
-            
-            order_data.append({
-                'id': order.id,
-                'status': order.get_status_display(),
-                'comments': order.comments,
-                'total_price': order.total_price,
-                'pay_order': order.get_pay_order_display(),
-                'firstname': order.firstname,
-                'lastname': order.lastname,
-                'phonenumber': order.phonenumber,
-                'address': order.address,
-                'restaurant': get_nearest_restaurant(order.id),
-                'capable_restaurants': capable_restaurants,
-                'registrated_at': order.registrated_at,
-                'called_at': order.called_at,
-                'delivered_at': order.delivered_at
-            })
-            
-        context = {
-            'order_data': order_data
-        }
-        return render(request, 'order_items.html', context=context)
+        order_data.append({
+            'id': order.id,
+            'status': order.get_status_display(),
+            'comments': order.comments,
+            'total_price': order.total_price,
+            'pay_order': order.get_pay_order_display(),
+            'firstname': order.firstname,
+            'lastname': order.lastname,
+            'phonenumber': order.phonenumber,
+            'address': order.address,
+            'restaurant': restaurant_places,  # Передаем тот самый список!
+            'capable_restaurants': capable_restaurants,
+            'registrated_at': order.registrated_at,
+            'called_at': order.called_at,
+            'delivered_at': order.delivered_at
+        })
+        
+    context = {
+        'order_data': order_data
+    }
+    return render(request, 'order_items.html', context=context)
 
 def change_order(request, order_id):
     order = get_object_or_404(Order, id=order_id )

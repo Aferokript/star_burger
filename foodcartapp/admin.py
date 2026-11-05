@@ -15,23 +15,6 @@ from restaurateur.views import can_cook
 from django.core.exceptions import ValidationError
 
 
-class OrderAdminForm(forms.ModelForm):
-    class Meta:
-        model = Order
-        fields = "__all__"
-
-    def clean(self):
-        cleaned_data = super().clean()
-        restaurant = cleaned_data.get("restaurant")
-        
-        if restaurant and self.instance.pk:
-            if not can_cook(self.instance, restaurant):
-                raise ValidationError({
-                    "restaurant": f"Ресторан «{restaurant.name}» не может приготовить этот заказ."
-                })
-        return cleaned_data
-
-
 class RestaurantMenuItemInline(admin.TabularInline):
     model = RestaurantMenuItem
     extra = 0
@@ -61,7 +44,6 @@ class ProductAdmin(admin.ModelAdmin):
         'name',
         'category',
         'price',
-        'ingredients'
     ]
     list_display_links = [
         'name',
@@ -87,7 +69,6 @@ class ProductAdmin(admin.ModelAdmin):
                 'image',
                 'get_image_preview',
                 'price',
-                'ingredients'
             ]
         }),
         ('Подробно', {
@@ -146,7 +127,6 @@ class OrderItemAdmin(admin.TabularInline):
 class OrderAdmin(admin.ModelAdmin):
     list_display = ['id', 'status', 'comments', 'pay_order', 'firstname', 'lastname', 'phonenumber', 'address', 'registrated_at', 'called_at', 'delivered_at']
     inlines = [OrderItemAdmin]
-    form = OrderAdminForm
     
     def response_change(self, request, obj):
         res = super().response_change(request, obj)
