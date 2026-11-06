@@ -6,12 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('foodcartapp', '0038_order'),
+        ("foodcartapp", "0038_order"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='order',
-            options={'verbose_name': 'Заказ', 'verbose_name_plural': 'Заказы'},
+            name="order",
+            options={"verbose_name": "Заказ", "verbose_name_plural": "Заказы"},
         ),
     ]

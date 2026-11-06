@@ -7,18 +7,36 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('foodcartapp', '0037_auto_20210125_1833'),
+        ("foodcartapp", "0037_auto_20210125_1833"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='order',
+            name="order",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=30, verbose_name='Имя')),
-                ('last_name', models.CharField(max_length=30, verbose_name='Фамилия')),
-                ('phone_number', phonenumber_field.modelfields.PhoneNumberField(blank=True, max_length=128, region=None, verbose_name='Телефон')),
-                ('address', models.CharField(db_index=True, max_length=80, verbose_name='Адрес')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=30, verbose_name="Имя")),
+                ("last_name", models.CharField(max_length=30, verbose_name="Фамилия")),
+                (
+                    "phone_number",
+                    phonenumber_field.modelfields.PhoneNumberField(
+                        blank=True, max_length=128, region=None, verbose_name="Телефон"
+                    ),
+                ),
+                (
+                    "address",
+                    models.CharField(
+                        db_index=True, max_length=80, verbose_name="Адрес"
+                    ),
+                ),
             ],
         ),
     ]

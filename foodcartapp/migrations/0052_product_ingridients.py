@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('foodcartapp', '0051_order_restaurant'),
+        ("foodcartapp", "0051_order_restaurant"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='product',
-            name='ingridients',
-            field=models.JSONField(default=list, verbose_name='Список продуктов'),
+            model_name="product",
+            name="ingridients",
+            field=models.JSONField(default=list, verbose_name="Список продуктов"),
         ),
     ]

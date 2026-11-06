@@ -7,14 +7,19 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('foodcartapp', '0056_remove_product_ingredients'),
-        ('places', '0002_rename_data_request_restaurantsplace_date_request'),
+        ("foodcartapp", "0056_remove_product_ingredients"),
+        ("places", "0002_rename_data_request_restaurantsplace_date_request"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='restaurantsplace',
-            name='restaurant',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='places', to='foodcartapp.restaurant', verbose_name='Ресторан'),
+            model_name="restaurantsplace",
+            name="restaurant",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="places",
+                to="foodcartapp.restaurant",
+                verbose_name="Ресторан",
+            ),
         ),
     ]

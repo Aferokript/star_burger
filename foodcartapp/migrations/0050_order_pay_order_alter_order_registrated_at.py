@@ -7,19 +7,26 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('foodcartapp', '0049_order_called_at_order_delivered_at_and_more'),
+        ("foodcartapp", "0049_order_called_at_order_delivered_at_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='order',
-            name='pay_order',
-            field=models.CharField(choices=[('NA', 'Наличные'), ('CA', 'Оплата картой'), ('SBP', 'СБП')], db_index=True, default=1, max_length=35),
+            model_name="order",
+            name="pay_order",
+            field=models.CharField(
+                choices=[("NA", "Наличные"), ("CA", "Оплата картой"), ("SBP", "СБП")],
+                db_index=True,
+                default=1,
+                max_length=35,
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='order',
-            name='registrated_at',
-            field=models.DateTimeField(db_index=True, default=django.utils.timezone.now),
+            model_name="order",
+            name="registrated_at",
+            field=models.DateTimeField(
+                db_index=True, default=django.utils.timezone.now
+            ),
         ),
     ]

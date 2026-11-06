@@ -7,23 +7,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('foodcartapp', '0048_order_comments'),
+        ("foodcartapp", "0048_order_comments"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='order',
-            name='called_at',
+            model_name="order",
+            name="called_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='order',
-            name='delivered_at',
+            model_name="order",
+            name="delivered_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='order',
-            name='registrated_at',
+            model_name="order",
+            name="registrated_at",
             field=models.DateTimeField(default=django.utils.timezone.now),
         ),
     ]

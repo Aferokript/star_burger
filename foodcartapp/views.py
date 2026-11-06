@@ -1,87 +1,98 @@
 import phonenumbers
-from phonenumbers.phonenumberutil import NumberParseException 
+from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.http import JsonResponse
 from django.templatetags.static import static
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.parsers import JSONParser
+from phonenumbers.phonenumberutil import NumberParseException
 from rest_framework import status
 from rest_framework.decorators import api_view
+from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
-from .models import Product, Order, OrderItem, OrderSerialize
-from django.core.exceptions import ValidationError
-from django.db import transaction
+
+from .models import Order, OrderItem, OrderSerialize, Product
 
 
 def banners_list_api(request):
     # FIXME move data to db?
-    return JsonResponse([
-        {
-            'title': 'Burger',
-            'src': static('burger.jpg'),
-            'text': 'Tasty Burger at your door step',
+    return JsonResponse(
+        [
+            {
+                "title": "Burger",
+                "src": static("burger.jpg"),
+                "text": "Tasty Burger at your door step",
+            },
+            {
+                "title": "Spices",
+                "src": static("food.jpg"),
+                "text": "All Cuisines",
+            },
+            {
+                "title": "New York",
+                "src": static("tasty.jpg"),
+                "text": "Food is incomplete without a tasty dessert",
+            },
+        ],
+        safe=False,
+        json_dumps_params={
+            "ensure_ascii": False,
+            "indent": 4,
         },
-        {
-            'title': 'Spices',
-            'src': static('food.jpg'),
-            'text': 'All Cuisines',
-        },
-        {
-            'title': 'New York',
-            'src': static('tasty.jpg'),
-            'text': 'Food is incomplete without a tasty dessert',
-        }
-    ], safe=False, json_dumps_params={
-        'ensure_ascii': False,
-        'indent': 4,
-    })
+    )
 
 
 def product_list_api(request):
-    products = Product.objects.select_related('category').available()
+    products = Product.objects.select_related("category").available()
 
     dumped_products = []
     for product in products:
         dumped_product = {
-            'id': product.id,
-            'name': product.name,
-            'price': product.price,
-            'special_status': product.special_status,
-            'description': product.description,
-            'category': {
-                'id': product.category.id,
-                'name': product.category.name,
-            } if product.category else None,
-            'image': product.image.url,
-            'restaurant': {
-                'id': product.id,
-                'name': product.name,
-            }
+            "id": product.id,
+            "name": product.name,
+            "price": product.price,
+            "special_status": product.special_status,
+            "description": product.description,
+            "category": (
+                {
+                    "id": product.category.id,
+                    "name": product.category.name,
+                }
+                if product.category
+                else None
+            ),
+            "image": product.image.url,
+            "restaurant": {
+                "id": product.id,
+                "name": product.name,
+            },
         }
         dumped_products.append(dumped_product)
-    return JsonResponse(dumped_products, safe=False, json_dumps_params={
-        'ensure_ascii': False,
-        'indent': 4,
-    })
-    
+    return JsonResponse(
+        dumped_products,
+        safe=False,
+        json_dumps_params={
+            "ensure_ascii": False,
+            "indent": 4,
+        },
+    )
 
-@api_view(['GET', 'POST'])
+
+@api_view(["GET", "POST"])
 def register_order(request):
-    
+
     try:
-        if request.method == 'GET':
-            return Response('Отправьте сюда ПОСТ запрос')
-    
-        elif request.method == 'POST':
+        if request.method == "GET":
+            return Response("Отправьте сюда ПОСТ запрос")
+
+        elif request.method == "POST":
             with transaction.atomic():
                 order_data = request.data
                 serializer = OrderSerialize(data=order_data)
                 if serializer.is_valid() and serializer.full_clean():
                     serializer.save()
                     return Response(serializer.data, status=201)
-            
+
                 return Response(serializer.errors, status=400)
-        
+
     except ValidationError as error:
-        return Response(f'{error}', status=400)
-        
-    
+        return Response(f"{error}", status=400)

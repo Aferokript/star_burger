@@ -1,19 +1,17 @@
+from django import forms
 from django.contrib import admin
-from django.shortcuts import reverse, redirect
+from django.core.exceptions import ValidationError
+from django.db.models import F, Sum
 from django.http import HttpResponseRedirect
+from django.shortcuts import redirect, reverse
 from django.templatetags.static import static
 from django.utils.html import format_html
-from django.db.models import F, Sum
-from .models import Product
-from .models import ProductCategory
-from .models import Restaurant
-from .models import RestaurantMenuItem
-from .models import Order
-from .models import OrderItem
-from django import forms
-from restaurateur.views import can_cook
-from django.core.exceptions import ValidationError
+
 from places.models import RestaurantsPlace
+from restaurateur.views import can_cook
+
+from .models import (Order, OrderItem, Product, ProductCategory, Restaurant,
+                     RestaurantMenuItem)
 
 
 class RestaurantMenuItemInline(admin.TabularInline):
@@ -24,95 +22,98 @@ class RestaurantMenuItemInline(admin.TabularInline):
 @admin.register(Restaurant)
 class RestaurantAdmin(admin.ModelAdmin):
     search_fields = [
-        'name',
-        'address',
-        'contact_phone',
+        "name",
+        "address",
+        "contact_phone",
     ]
     list_display = [
-        'name',
-        'address',
-        'contact_phone',
+        "name",
+        "address",
+        "contact_phone",
     ]
-    inlines = [
-        RestaurantMenuItemInline
-    ]
+    inlines = [RestaurantMenuItemInline]
 
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = [
-        'get_image_list_preview',
-        'name',
-        'category',
-        'price',
+        "get_image_list_preview",
+        "name",
+        "category",
+        "price",
     ]
     list_display_links = [
-        'name',
+        "name",
     ]
     list_filter = [
-        'category',
+        "category",
     ]
     search_fields = [
         # FIXME SQLite can not convert letter case for cyrillic words properly, so search will be buggy.
         # Migration to PostgreSQL is necessary
-        'name',
-        'category__name',
+        "name",
+        "category__name",
     ]
 
-    inlines = [
-        RestaurantMenuItemInline
-    ]
+    inlines = [RestaurantMenuItemInline]
     fieldsets = (
-        ('Общее', {
-            'fields': [
-                'name',
-                'category',
-                'image',
-                'get_image_preview',
-                'price',
-            ]
-        }),
-        ('Подробно', {
-            'fields': [
-                'special_status',
-                'description',
-            ],
-            'classes': [
-                'wide'
-            ],
-        }),
+        (
+            "Общее",
+            {
+                "fields": [
+                    "name",
+                    "category",
+                    "image",
+                    "get_image_preview",
+                    "price",
+                ]
+            },
+        ),
+        (
+            "Подробно",
+            {
+                "fields": [
+                    "special_status",
+                    "description",
+                ],
+                "classes": ["wide"],
+            },
+        ),
     )
 
     readonly_fields = [
-        'get_image_preview',
+        "get_image_preview",
     ]
 
     class Media:
-        css = {
-            "all": (
-                static("admin/foodcartapp.css")
-            )
-        }
+        css = {"all": (static("admin/foodcartapp.css"))}
 
     def get_image_preview(self, obj):
         if not obj.image:
-            return 'выберите картинку'
-        return format_html('<img src="{url}" style="max-height: 200px;"/>', url=obj.image.url)
-    get_image_preview.short_description = 'превью'
+            return "выберите картинку"
+        return format_html(
+            '<img src="{url}" style="max-height: 200px;"/>', url=obj.image.url
+        )
+
+    get_image_preview.short_description = "превью"
 
     def get_image_list_preview(self, obj):
         if not obj.image or not obj.id:
-            return 'нет картинки'
-        edit_url = reverse('admin:foodcartapp_product_change', args=(obj.id,))
-        return format_html('<a href="{edit_url}"><img src="{src}" style="max-height: 50px;"/></a>', edit_url=edit_url, src=obj.image.url)
-    get_image_list_preview.short_description = 'превью'
+            return "нет картинки"
+        edit_url = reverse("admin:foodcartapp_product_change", args=(obj.id,))
+        return format_html(
+            '<a href="{edit_url}"><img src="{src}" style="max-height: 50px;"/></a>',
+            edit_url=edit_url,
+            src=obj.image.url,
+        )
+
+    get_image_list_preview.short_description = "превью"
 
 
 class OrderItemAdmin(admin.TabularInline):
     model = OrderItem
     extra = 0
-    
-    
+
     def save_formset(self, request, form, formset, change):
         instances = formset.save(commit=False)
         for instance in instances:
@@ -120,32 +121,35 @@ class OrderItemAdmin(admin.TabularInline):
                 instance.price = instance.product.price
             instance.user = request.user
             instance.save()
-        
+
         formset.save_m2m()
 
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['id', 'status', 'comments', 'pay_order', 'firstname', 'lastname', 'phonenumber', 'address', 'registrated_at', 'called_at', 'delivered_at']
+    list_display = [
+        "id",
+        "status",
+        "comments",
+        "pay_order",
+        "firstname",
+        "lastname",
+        "phonenumber",
+        "address",
+        "registrated_at",
+        "called_at",
+        "delivered_at",
+    ]
     inlines = [OrderItemAdmin]
-    
+
     def response_change(self, request, obj):
         res = super().response_change(request, obj)
         if "next" in request.GET:
-            return HttpResponseRedirect(request.GET['next'])
+            return HttpResponseRedirect(request.GET["next"])
         else:
             return res
-    
+
 
 @admin.register(RestaurantsPlace)
 class RestPlaceAdmin(admin.ModelAdmin):
-    list_display = ['restaurant', 'address', 'lon', 'lat', 'date_request']
-
-
-    
-    
-            
-       
-    
-    
-    
+    list_display = ["restaurant", "address", "lon", "lat", "date_request"]

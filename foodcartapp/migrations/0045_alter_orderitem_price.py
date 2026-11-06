@@ -7,13 +7,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('foodcartapp', '0044_auto_20261019_2129'),
+        ("foodcartapp", "0044_auto_20261019_2129"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='orderitem',
-            name='price',
-            field=models.DecimalField(decimal_places=2, max_digits=5, validators=[django.core.validators.MinValueValidator(100)]),
+            model_name="orderitem",
+            name="price",
+            field=models.DecimalField(
+                decimal_places=2,
+                max_digits=5,
+                validators=[django.core.validators.MinValueValidator(100)],
+            ),
         ),
     ]

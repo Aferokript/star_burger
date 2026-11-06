@@ -6,28 +6,28 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('foodcartapp', '0054_restaurantmenuitem_lat_restaurantmenuitem_lon'),
+        ("foodcartapp", "0054_restaurantmenuitem_lat_restaurantmenuitem_lon"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='restaurantmenuitem',
-            name='lat',
+            model_name="restaurantmenuitem",
+            name="lat",
         ),
         migrations.RemoveField(
-            model_name='restaurantmenuitem',
-            name='lon',
+            model_name="restaurantmenuitem",
+            name="lon",
         ),
         migrations.AddField(
-            model_name='restaurant',
-            name='lat',
-            field=models.FloatField(default=1, verbose_name='Долгота'),
+            model_name="restaurant",
+            name="lat",
+            field=models.FloatField(default=1, verbose_name="Долгота"),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='restaurant',
-            name='lon',
-            field=models.FloatField(default=1, verbose_name='Широта'),
+            model_name="restaurant",
+            name="lon",
+            field=models.FloatField(default=1, verbose_name="Широта"),
             preserve_default=False,
         ),
     ]

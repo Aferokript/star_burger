@@ -9,24 +9,42 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('foodcartapp', '0056_remove_product_ingredients'),
+        ("foodcartapp", "0056_remove_product_ingredients"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='RestaurantsPlace',
+            name="RestaurantsPlace",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('address', models.CharField(max_length=50, verbose_name='Адрес')),
-                ('lat', models.FloatField(verbose_name='Широта')),
-                ('lon', models.FloatField(verbose_name='Долгота')),
-                ('data_request', models.DateField(verbose_name='Дата запроса к Геокодеру')),
-                ('restaurant', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='foodcartapp.restaurant', verbose_name='Ресторан')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("address", models.CharField(max_length=50, verbose_name="Адрес")),
+                ("lat", models.FloatField(verbose_name="Широта")),
+                ("lon", models.FloatField(verbose_name="Долгота")),
+                (
+                    "data_request",
+                    models.DateField(verbose_name="Дата запроса к Геокодеру"),
+                ),
+                (
+                    "restaurant",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="foodcartapp.restaurant",
+                        verbose_name="Ресторан",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Адрес',
-                'verbose_name_plural': 'Адреса ',
-                'unique_together': {('restaurant', 'address')},
+                "verbose_name": "Адрес",
+                "verbose_name_plural": "Адреса ",
+                "unique_together": {("restaurant", "address")},
             },
         ),
     ]

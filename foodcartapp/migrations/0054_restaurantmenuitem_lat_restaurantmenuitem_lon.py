@@ -6,20 +6,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('foodcartapp', '0053_rename_ingridients_product_ingredients'),
+        ("foodcartapp", "0053_rename_ingridients_product_ingredients"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='restaurantmenuitem',
-            name='lat',
-            field=models.FloatField(default=1, verbose_name='Долгота'),
+            model_name="restaurantmenuitem",
+            name="lat",
+            field=models.FloatField(default=1, verbose_name="Долгота"),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='restaurantmenuitem',
-            name='lon',
-            field=models.FloatField(default=1, verbose_name='Широта'),
+            model_name="restaurantmenuitem",
+            name="lon",
+            field=models.FloatField(default=1, verbose_name="Широта"),
             preserve_default=False,
         ),
     ]
