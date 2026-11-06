@@ -13,6 +13,7 @@ from .models import OrderItem
 from django import forms
 from restaurateur.views import can_cook
 from django.core.exceptions import ValidationError
+from places.models import RestaurantsPlace
 
 
 class RestaurantMenuItemInline(admin.TabularInline):
@@ -135,7 +136,10 @@ class OrderAdmin(admin.ModelAdmin):
         else:
             return res
     
-    
+
+@admin.register(RestaurantsPlace)
+class RestPlaceAdmin(admin.ModelAdmin):
+    list_display = ['restaurant', 'address', 'lon', 'lat', 'date_request']
 
 
     

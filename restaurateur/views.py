@@ -11,7 +11,8 @@ from foodcartapp.models import Order
 from foodcartapp.models import Product, Restaurant, RestaurantMenuItem
 from star_burger.settings import api_key
 from geopy.distance import distance
-        
+from places.models import RestaurantsPlace
+       
     
 class Login(forms.Form):
     username = forms.CharField(
@@ -91,21 +92,7 @@ def fetch_coordinates(apikey, address):
     most_relevant = found_places[0]
     lon, lat = most_relevant['GeoObject']['Point']['pos'].split(" ")
     return lon, lat            
-            
-
-def get_nearest_restaurant():
-    restaurants_coordinate = []
-    restaurants = Restaurant.objects.all()
-    for restaurant in restaurants:
-        restaurant_coordinate = fetch_coordinates(api_key, restaurant.address)
-        if restaurant_coordinate:
-            lon, lat = restaurant_coordinate
-            restaurants_coordinate.append({
-                'restaurant': restaurant,
-                'coords': (float(lat), float(lon))
-            })
-    return restaurants_coordinate
-    
+              
 
 def is_manager(user):
     return user.is_staff
@@ -143,8 +130,16 @@ def view_restaurants(request):
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
     order_data = []
-
+    rest = []
     all_restaurants = list(Restaurant.objects.prefetch_related('menu_items__product'))
+    restaurants_place = RestaurantsPlace.objects.all()
+    for place in restaurants_place:
+        restaurant_lon = place.lon
+        restaurant_lat = place.lat
+        rest.append({
+            'restaurant': place.restaurant,
+            'coords': (float(restaurant_lat), float(restaurant_lon))
+        })
 
     orders = Order.objects.all().count_order_price().prefetch_related('items__product')
     
@@ -159,20 +154,18 @@ def view_orders(request):
             capable_restaurants = [r for r in all_restaurants if can_cook(order, r)]
 
         client_lon_lat = fetch_coordinates(api_key, order.address)
-        
         restaurant_places = [] 
-        
         if client_lon_lat:
             client_address = (float(client_lon_lat[1]), float(client_lon_lat[0]))
-            restaurants_coordinate = get_nearest_restaurant()
-
-            for item in restaurants_coordinate:
-                distance_to_restaurant = distance(client_address, item['coords']).km
+            
+            for item in rest:
+                distance_to_rest = distance(client_address, item['coords']).km
                 restaurant_places.append({
                     'restaurant': item['restaurant'], 
-                    'distance': distance_to_restaurant
+                    'distance': distance_to_rest
                 })
             restaurant_places.sort(key=lambda item: item['distance'])
+            
             
         order_data.append({
             'id': order.id,
