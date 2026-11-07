@@ -120,8 +120,10 @@ class OrderItemAdmin(admin.TabularInline):
             if not instance.price:
                 instance.price = instance.product.price
             instance.user = request.user
-            instance.save()
-
+            
+        instance.save()
+        for obj in formset.deleted_objects:
+            obj.delete()
         formset.save_m2m()
 
 

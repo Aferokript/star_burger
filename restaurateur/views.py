@@ -1,4 +1,5 @@
 import requests
+from .geocoder_logic import fetch_coordinates
 from django import forms
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
@@ -76,27 +77,6 @@ def can_cook(order, restaurant):
         if product not in menu_products:
             return False
     return True
-
-
-def fetch_coordinates(yandex_geocoder, address):
-    base_url = "https://geocode-maps.yandex.ru/1.x"
-    response = requests.get(
-        base_url,
-        params={
-            "geocode": address,
-            "apikey": yandex_geocoder,
-            "format": "json",
-        },
-    )
-    response.raise_for_status()
-    found_places = response.json()["response"]["GeoObjectCollection"]["featureMember"]
-
-    if not found_places:
-        return None
-
-    most_relevant = found_places[0]
-    lon, lat = most_relevant["GeoObject"]["Point"]["pos"].split(" ")
-    return lon, lat
 
 
 def is_manager(user):
