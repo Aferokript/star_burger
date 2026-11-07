@@ -131,7 +131,7 @@ class OrderAdmin(admin.ModelAdmin):
         "id",
         "status",
         "comments",
-        "pay_order",
+        "pay",
         "firstname",
         "lastname",
         "phonenumber",
@@ -152,4 +152,4 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(RestaurantsPlace)
 class RestPlaceAdmin(admin.ModelAdmin):
-    list_display = ["restaurant", "address", "lon", "lat", "date_request"]
+    list_display = ["address", "lon", "lat", "date_request"]

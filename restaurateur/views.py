@@ -10,7 +10,7 @@ from geopy.distance import distance
 
 from foodcartapp.models import Order, Product, Restaurant, RestaurantMenuItem
 from places.models import RestaurantsPlace
-from star_burger.settings import api_key
+from star_burger.settings import yandex_geocoder
 
 
 class Login(forms.Form):
@@ -78,13 +78,13 @@ def can_cook(order, restaurant):
     return True
 
 
-def fetch_coordinates(apikey, address):
+def fetch_coordinates(yandex_geocoder, address):
     base_url = "https://geocode-maps.yandex.ru/1.x"
     response = requests.get(
         base_url,
         params={
             "geocode": address,
-            "apikey": apikey,
+            "apikey": yandex_geocoder,
             "format": "json",
         },
     )
@@ -151,7 +151,7 @@ def view_orders(request):
         restaurant_lat = place.lat
         rest.append(
             {
-                "restaurant": place.restaurant,
+                "restaurant": place.address,
                 "coords": (float(restaurant_lat), float(restaurant_lon)),
             }
         )
@@ -167,7 +167,7 @@ def view_orders(request):
         else:
             capable_restaurants = [r for r in all_restaurants if can_cook(order, r)]
 
-        client_lon_lat = fetch_coordinates(api_key, order.address)
+        client_lon_lat = fetch_coordinates(yandex_geocoder, order.address)
         restaurant_places = []
         if client_lon_lat:
             client_address = (float(client_lon_lat[1]), float(client_lon_lat[0]))
@@ -185,12 +185,12 @@ def view_orders(request):
                 "status": order.get_status_display(),
                 "comments": order.comments,
                 "total_price": order.total_price,
-                "pay_order": order.get_pay_order_display(),
+                "pay_order": order.get_pay_display(),
                 "firstname": order.firstname,
                 "lastname": order.lastname,
                 "phonenumber": order.phonenumber,
                 "address": order.address,
-                "restaurant": restaurant_places,  # Передаем тот самый список!
+                "restaurant": restaurant_places,
                 "capable_restaurants": capable_restaurants,
                 "registrated_at": order.registrated_at,
                 "called_at": order.called_at,

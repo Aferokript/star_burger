@@ -77,14 +77,11 @@ def product_list_api(request):
     )
 
 
-@api_view(["GET", "POST"])
+@api_view(["POST"])
 def register_order(request):
 
     try:
-        if request.method == "GET":
-            return Response("Отправьте сюда ПОСТ запрос")
-
-        elif request.method == "POST":
+        if request.method == "POST":
             with transaction.atomic():
                 order_data = request.data
                 serializer = OrderSerialize(data=order_data)

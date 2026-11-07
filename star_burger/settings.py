@@ -12,7 +12,7 @@ load_dotenv()
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-api_key = os.environ["YANDEX_GEOCODER"]
+yandex_geocoder = os.environ["YANDEX_GEOCODER"]
 
 SECRET_KEY = env("SECRET_KEY")
 DEBUG = env.bool("DEBUG", True)

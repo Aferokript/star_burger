@@ -29,8 +29,6 @@ class Restaurant(models.Model):
         max_length=50,
         blank=True,
     )
-    lon = models.FloatField(verbose_name="Широта")
-    lat = models.FloatField(verbose_name="Долгота")
 
     class Meta:
         verbose_name = "ресторан"
@@ -119,33 +117,37 @@ class RestaurantMenuItem(models.Model):
 
 
 class Order(models.Model):
-    firstname = models.CharField(max_length=30, null=False, verbose_name="Имя")
+    firstname = models.CharField(max_length=30, verbose_name="Имя")
     status = models.CharField(
         max_length=50,
+        verbose_name="статус",
         choices=[
+            ("NE", "Недоставлен"),
             ("PR", "Принят"),
             ("SO", "Собираем"),
             ("KU", "Везем к вам "),
             ("VI", "Выполнен"),
         ],
         db_index=True,
+        default="NE",
     )
-    comments = models.CharField(max_length=100, null=True, blank=True)
-    lastname = models.CharField(max_length=30, null=False, verbose_name="Фамилия")
-    phonenumber = PhoneNumberField(blank=True, null=False, verbose_name="Телефон")
+    comments = models.CharField(max_length=100, blank=True)
+    lastname = models.CharField(max_length=30, verbose_name="Фамилия")
+    phonenumber = PhoneNumberField(blank=True, verbose_name="Телефон")
     address = models.CharField(
         max_length=80, null=False, verbose_name="Адрес", db_index=True
     )
     registrated_at = models.DateTimeField(default=timezone.now, db_index=True)
-    called_at = models.DateTimeField(null=True, blank=True)
-    delivered_at = models.DateTimeField(null=True, blank=True)
-    pay_order = models.CharField(
+    called_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    delivered_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    pay = models.CharField(
+        verbose_name="Способ оплаты",
         max_length=35,
         choices=[("NA", "Наличные"), ("CA", "Оплата картой"), ("SBP", "СБП")],
         db_index=True,
     )
     restaurant = models.ForeignKey(
-        Restaurant, on_delete=models.CASCADE, verbose_name="Рестораны"
+        Restaurant, on_delete=models.DO_NOTHING, null=True, verbose_name="Рестораны"
     )
 
     class Meta:
@@ -160,14 +162,23 @@ class Order(models.Model):
 
 class OrderItem(models.Model):
     order_details = models.ForeignKey(
-        Order, related_name="items", on_delete=models.CASCADE
+        Order,
+        related_name="items",
+        verbose_name="Детали заказа",
+        on_delete=models.CASCADE,
     )
     product = models.ForeignKey(
-        Product, related_name="order_items", on_delete=models.CASCADE
+        Product,
+        related_name="order_items",
+        verbose_name="Список продуктов",
+        on_delete=models.CASCADE,
     )
-    quantity = models.PositiveIntegerField(default=0)
+    quantity = models.PositiveIntegerField(default=1, verbose_name="Количество")
     price = models.DecimalField(
-        max_digits=5, decimal_places=2, validators=[MinValueValidator(100)]
+        max_digits=5,
+        decimal_places=2,
+        verbose_name="Цена",
+        validators=[MinValueValidator(100)],
     )
 
     class Meta:
@@ -178,21 +189,35 @@ class OrderItem(models.Model):
         return f"{self.order_details}  {self.quantity}"
 
 
-class ItemSerialize(serializers.Serializer):
-    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
-    quantity = IntegerField()
+class ItemSerialize(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = ["order_details", "product", "quantity", "price"]
 
 
-class OrderSerialize(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    firstname = CharField()
-    lastname = CharField()
-    phonenumber = CharField()
-    address = CharField()
-    products = ItemSerialize(many=True, write_only=True, required=False)
+class OrderSerialize(serializers.ModelSerializer):
+    products = ItemSerialize(many=True, write_only=True, allow_empty=False)
+
+    class Meta:
+        model = Order
+        fields = [
+            "id",
+            "firstname",
+            "status",
+            "comments",
+            "lastname",
+            "phonenumber",
+            "address",
+            "registrated_at",
+            "called_at",
+            "delivered_at",
+            "pay",
+            "restaurant",
+            "products",
+        ]
 
     def create(self, validated_data):
-        item_data = validated_data.pop("products")
+        item_data = validated_data.pop("products", [])
         order = Order.objects.create(**validated_data)
 
         for item in item_data:

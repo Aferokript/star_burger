@@ -40,7 +40,7 @@
             <td> <details>
               <summary>Может быть приготовлен ресторанами:</summary>
                 {% for rest in data.restaurant %}
-              {{ rest.restaurant.name }} {{ rest.distance }}
+              {{ rest.restaurant }} {{ rest.distance }}
                 {% endfor %}
             </details></td>
             <td><a href="{% url 'admin:foodcartapp_order_change' data.id %}?next={{ request.get_full_path|urlencode }}">Ссылка на админку</a></td>
