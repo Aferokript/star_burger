@@ -3,8 +3,8 @@ from django.db import models
 from foodcartapp.models import Restaurant
 
 
-class RestaurantsPlace(models.Model):
-    address = models.CharField(max_length=255, unique=True, verbose_name="Адрес")
+class Places(models.Model):
+    address = models.CharField(max_length=255, unique=True, blank=True, null=True, verbose_name="Адрес")
     lat = models.FloatField(verbose_name="Широта", null=True, blank=True)
     lon = models.FloatField(verbose_name="Долгота", null=True, blank=True)
     date_request = models.DateField(verbose_name="Дата запроса", null=True, blank=True)

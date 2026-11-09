@@ -1,5 +1,6 @@
 import requests
 from .geocoder_logic import fetch_coordinates
+from .distance_logic import count_restaurant_distance
 from django import forms
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
@@ -10,7 +11,7 @@ from django.views import View
 from geopy.distance import distance
 
 from foodcartapp.models import Order, Product, Restaurant, RestaurantMenuItem
-from places.models import RestaurantsPlace
+from places.models import Places
 from star_burger.settings import yandex_geocoder
 
 
@@ -123,20 +124,20 @@ def view_restaurants(request):
 @user_passes_test(is_manager, login_url="restaurateur:login")
 def view_orders(request):
     order_data = []
-    rest = []
     all_restaurants = list(Restaurant.objects.prefetch_related("menu_items__product"))
-    restaurants_place = RestaurantsPlace.objects.all()
-    for place in restaurants_place:
-        restaurant_lon = place.lon
-        restaurant_lat = place.lat
-        rest.append(
-            {
-                "restaurant": place.address,
-                "coords": (float(restaurant_lat), float(restaurant_lon)),
-            }
-        )
-
+   
     orders = Order.objects.all().count_order_price().prefetch_related("items__product")
+    
+    all_places = Places.objects.filter(lat__isnull=False, lon__isnull=False)
+    coords_by_address = {p.address: (p.lat, p.lon) for p in all_places}
+
+    restaurants_with_coords = []
+    for r in all_restaurants:
+        if r.address in coords_by_address:
+            restaurants_with_coords.append({
+                'restaurant': r,
+                'coords': coords_by_address[r.address] 
+            })
 
     for order in orders:
         if order.status == "VI":
@@ -146,18 +147,42 @@ def view_orders(request):
             capable_restaurants = [order.restaurant]
         else:
             capable_restaurants = [r for r in all_restaurants if can_cook(order, r)]
-
-        client_lon_lat = fetch_coordinates(yandex_geocoder, order.address)
+        
+        client_coords = coords_by_address.get(order.address)
+        
         restaurant_places = []
-        if client_lon_lat:
-            client_address = (float(client_lon_lat[1]), float(client_lon_lat[0]))
-
-            for item in rest:
-                distance_to_rest = distance(client_address, item["coords"]).km
-                restaurant_places.append(
-                    {"restaurant": item["restaurant"], "distance": distance_to_rest}
+        
+        if client_coords:
+            client_lat, client_lon = client_coords
+            
+            for item in restaurants_with_coords:
+                d = distance((client_lat, client_lon), item['coords']).km
+                restaurant_places.append({
+                    'restaurant': item['restaurant'], 
+                    'distance': d
+                })
+            restaurant_places.sort(key=lambda item: item['distance'])
+            
+        else:
+            client_api_coords = fetch_coordinates(yandex_geocoder, order.address)
+            if client_api_coords:
+                client_lon, client_lat = float(client_api_coords[0]), float(client_api_coords[1])
+                
+                for item in restaurants_with_coords:
+                    distance_to_rest = distance((client_lat, client_lon), item['coords']).km
+                    restaurant_places.append({
+                        'restaurant': item['restaurant'], 
+                        'distance': distance_to_rest
+                    })
+                restaurant_places.sort(key=lambda item: item['distance'])
+                
+                Places.objects.create(
+                    address=order.address, 
+                    lat=client_lat, 
+                    lon=client_lon
                 )
-            restaurant_places.sort(key=lambda item: item["distance"])
+                
+            
 
         order_data.append(
             {

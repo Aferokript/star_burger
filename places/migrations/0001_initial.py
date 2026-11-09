@@ -8,9 +8,7 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-        ("foodcartapp", "0056_remove_product_ingredients"),
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(

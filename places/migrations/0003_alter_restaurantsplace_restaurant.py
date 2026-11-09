@@ -7,7 +7,6 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("foodcartapp", "0056_remove_product_ingredients"),
         ("places", "0002_rename_data_request_restaurantsplace_date_request"),
     ]
 
