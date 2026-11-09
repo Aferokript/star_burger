@@ -149,6 +149,3 @@ class OrderAdmin(admin.ModelAdmin):
             return HttpResponseRedirect(request.GET["next"])
         else:
             return res
-
-
-
