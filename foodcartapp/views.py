@@ -10,7 +10,8 @@ from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 
-from .models import Order, OrderItem, OrderSerialize, Product
+from .models import Order, OrderItem, Product
+from .orders_serializer import ItemSerialize, OrderSerialize
 
 
 def banners_list_api(request):
@@ -79,13 +80,12 @@ def product_list_api(request):
 
 @api_view(["POST"])
 def register_order(request):
-
     try:
         if request.method == "POST":
             with transaction.atomic():
                 order_data = request.data
                 serializer = OrderSerialize(data=order_data)
-                if serializer.is_valid() and serializer.full_clean():
+                if serializer.is_valid():
                     serializer.save()
                     return Response(serializer.data, status=201)
 

@@ -6,6 +6,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, reverse
 from django.templatetags.static import static
 from django.utils.html import format_html
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from places.models import Places
 from restaurateur.views import can_cook
@@ -145,7 +146,11 @@ class OrderAdmin(admin.ModelAdmin):
 
     def response_change(self, request, obj):
         res = super().response_change(request, obj)
-        if "next" in request.GET:
+        if "next" in request.GET and url_has_allowed_host_and_scheme(
+            url=request.GET["next"],
+            allowed_hosts={request.get_host()},
+            require_https=request.is_secure(),
+        ):
             return HttpResponseRedirect(request.GET["next"])
         else:
             return res

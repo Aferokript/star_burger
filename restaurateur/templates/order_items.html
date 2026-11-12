@@ -29,22 +29,29 @@
         {% for data in order_data %}
           <tr>
             <td>{{ data.id }}</td>
-            <th>{{ data.status}}</th>
-            <td>{{ data.total_price }}</th>
-            <td>{{ data.pay_order }}</th>
+            <td>{{ data.status }}</td>
+            <td>{{ data.total_price }}</td>
+            <td>{{ data.pay_order }}</td>
             <td>{{ data.firstname }}</td>
             <td>{{ data.lastname }}</td>
             <td>{{ data.phonenumber }}</td>
             <td>{{ data.address }}</td>
-            <td>{{ data.comments }}</td>
-            <td> <details>
-              <summary>Может быть приготовлен ресторанами:</summary>
-                {% for rest in data.restaurant %}
-              {{ rest.restaurant.name }} {{ rest.distance }}
-                {% endfor %}
-            </details></td>
-            <td><a href="{% url 'admin:foodcartapp_order_change' data.id %}?next={{ request.get_full_path|urlencode }}">Ссылка на админку</a></td>
-          
+            {% if data.addresses_error %}
+                <td>{{ data.addresses_error }}</td>
+            {% else %}
+                <td>{{ data.comments }}</td>
+                <td>
+                    <details>
+                        <summary>Может быть приготовлен ресторанами:</summary>
+                        {% for rest in data.restaurant %}
+                            {{ rest.restaurant.name }} {{ rest.distance }}
+                        {% endfor %}
+                    </details>
+                </td>
+                <td>
+                    <a href="{% url 'admin:foodcartapp_order_change' data.id %}?next={{ request.get_full_path|urlencode }}">Ссылка на админку</a>
+                </td>
+            {% endif %}
           </tr>
         {% endfor %}
       </tbody>

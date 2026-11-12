@@ -12,7 +12,6 @@ from foodcartapp.models import Order, Product, Restaurant, RestaurantMenuItem
 from places.models import Places
 from star_burger.settings import yandex_geocoder
 
-from .distance_logic import count_restaurant_distance
 from .geocoder_logic import fetch_coordinates
 
 
@@ -126,61 +125,70 @@ def view_restaurants(request):
 def view_orders(request):
     order_data = []
     all_restaurants = list(Restaurant.objects.prefetch_related("menu_items__product"))
+    orders = (
+        Order.objects.exclude(status="VI")
+        .count_order_price()
+        .select_related("restaurant")
+        .prefetch_related("items__product")
+    )
 
-    orders = Order.objects.all().count_order_price().prefetch_related("items__product")
+    restaurants_address = [rest.address for rest in all_restaurants]
+    orders_address = [order.address for order in orders if order.address]
 
-    all_places = Places.objects.filter(lat__isnull=False, lon__isnull=False)
-    coords_by_address = {p.address: (p.lat, p.lon) for p in all_places}
+    order_coords = {}
+    for place in Places.objects.filter(address__in=orders_address):
+        order_coords[place.address] = (place.lat, place.lon)
 
-    restaurants_with_coords = []
-    for r in all_restaurants:
-        if r.address in coords_by_address:
-            restaurants_with_coords.append(
-                {"restaurant": r, "coords": coords_by_address[r.address]}
-            )
+    restaurant_coords = {}
+    for place in Places.objects.filter(address__in=restaurants_address):
+        restaurant_coords[place.address] = (place.lat, place.lon)
+
+    addresses_error = {}
+    for order in orders:
+        if order.address not in order_coords:
+            new_coords = fetch_coordinates(yandex_geocoder, order.address)
+            if new_coords:
+                lon, lat = float(new_coords[0]), float(new_coords[1])
+                order_coords[order.address] = (lat, lon)
+                Places.objects.create(address=order.address, lat=lat, lon=lon)
+            else:
+                addresses_error[order.address] = "Адрес не найден"
+
+    for restaurant in all_restaurants:
+        if restaurant.address not in restaurant_coords:
+            new_coords = fetch_coordinates(yandex_geocoder, restaurant.address)
+            if new_coords:
+                lon, lat = float(new_coords[0]), float(new_coords[1])
+                restaurant_coords[restaurant.address] = (lat, lon)
+                Places.objects.create(address=restaurant.address, lat=lat, lon=lon)
 
     for order in orders:
-        if order.status == "VI":
-            continue
-
         if order.restaurant:
             capable_restaurants = [order.restaurant]
         else:
-            capable_restaurants = [r for r in all_restaurants if can_cook(order, r)]
+            capable_restaurants = [
+                restaurant
+                for restaurant in all_restaurants
+                if can_cook(order, restaurant)
+            ]
 
-        client_coords = coords_by_address.get(order.address)
-
+        client_coords = order_coords.get(order.address)
         restaurant_places = []
 
         if client_coords:
             client_lat, client_lon = client_coords
 
-            for item in restaurants_with_coords:
-                d = distance((client_lat, client_lon), item["coords"]).km
-                restaurant_places.append(
-                    {"restaurant": item["restaurant"], "distance": d}
-                )
-            restaurant_places.sort(key=lambda item: item["distance"])
-
-        else:
-            client_api_coords = fetch_coordinates(yandex_geocoder, order.address)
-            if client_api_coords:
-                client_lon, client_lat = float(client_api_coords[0]), float(
-                    client_api_coords[1]
-                )
-
-                for item in restaurants_with_coords:
-                    distance_to_rest = distance(
-                        (client_lat, client_lon), item["coords"]
+            for restaurant in all_restaurants:
+                rest_coords = restaurant_coords.get(restaurant.address)
+                if rest_coords:
+                    restaurant_lat, restaurant_lon = rest_coords
+                    count_distance = distance(
+                        (client_lat, client_lon), (restaurant_lat, restaurant_lon)
                     ).km
                     restaurant_places.append(
-                        {"restaurant": item["restaurant"], "distance": distance_to_rest}
+                        {"restaurant": restaurant, "distance": count_distance}
                     )
-                restaurant_places.sort(key=lambda item: item["distance"])
-
-                Places.objects.create(
-                    address=order.address, lat=client_lat, lon=client_lon
-                )
+            restaurant_places.sort(key=lambda item: item["distance"])
 
         order_data.append(
             {
@@ -193,6 +201,7 @@ def view_orders(request):
                 "lastname": order.lastname,
                 "phonenumber": order.phonenumber,
                 "address": order.address,
+                "errors": addresses_error.get(order.address),
                 "restaurant": restaurant_places,
                 "capable_restaurants": capable_restaurants,
                 "registrated_at": order.registrated_at,
@@ -203,8 +212,3 @@ def view_orders(request):
 
     context = {"order_data": order_data}
     return render(request, "order_items.html", context=context)
-
-
-def change_order(request, order_id):
-    order = get_object_or_404(Order, id=order_id)
-    return redirect("admin:foodcartapp_order_change", order.id)

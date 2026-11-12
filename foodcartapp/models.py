@@ -5,8 +5,6 @@ from django.db.models import F, Sum
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 from phonenumbers.phonenumberutil import NumberParseException
-from rest_framework import serializers
-from rest_framework.serializers import CharField, IntegerField, ValidationError
 
 
 class OrderQuerySet(models.QuerySet):
@@ -137,9 +135,15 @@ class Order(models.Model):
     address = models.CharField(
         max_length=80, null=False, verbose_name="Адрес", db_index=True
     )
-    registrated_at = models.DateTimeField(default=timezone.now, db_index=True)
-    called_at = models.DateTimeField(null=True, blank=True, db_index=True)
-    delivered_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    registrated_at = models.DateTimeField(
+        default=timezone.now, db_index=True, verbose_name="Дата регистрации"
+    )
+    called_at = models.DateTimeField(
+        null=True, blank=True, db_index=True, verbose_name="Дата звонка"
+    )
+    delivered_at = models.DateTimeField(
+        null=True, blank=True, db_index=True, verbose_name="Дата доставки"
+    )
     pay = models.CharField(
         verbose_name="Способ оплаты",
         max_length=35,
@@ -147,7 +151,7 @@ class Order(models.Model):
         db_index=True,
     )
     restaurant = models.ForeignKey(
-        Restaurant, on_delete=models.DO_NOTHING, null=True, verbose_name="Рестораны"
+        Restaurant, on_delete=models.PROTECT, null=True, verbose_name="Ресторан"
     )
 
     class Meta:
@@ -187,39 +191,3 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.order_details}  {self.quantity}"
-
-
-class ItemSerialize(serializers.ModelSerializer):
-    class Meta:
-        model = OrderItem
-        fields = ["order_details", "product", "quantity", "price"]
-
-
-class OrderSerialize(serializers.ModelSerializer):
-    products = ItemSerialize(many=True, write_only=True, allow_empty=False)
-
-    class Meta:
-        model = Order
-        fields = [
-            "id",
-            "firstname",
-            "status",
-            "comments",
-            "lastname",
-            "phonenumber",
-            "address",
-            "registrated_at",
-            "called_at",
-            "delivered_at",
-            "pay",
-            "restaurant",
-            "products",
-        ]
-
-    def create(self, validated_data):
-        item_data = validated_data.pop("products", [])
-        order = Order.objects.create(**validated_data)
-
-        for item in item_data:
-            OrderItem.objects.create(order_details=order, **item)
-        return order
